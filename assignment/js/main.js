@@ -60,7 +60,8 @@ var state = {
   marker1: undefined,
   marker2: undefined,
   line: undefined,
-}
+};
+
 
 /** ---------------
 Map configuration
@@ -109,7 +110,8 @@ var resetApplication = function() {
   map.removeLayer(state.line);
   state.line = undefined;
   $('#button-reset').hide();
-}
+  map.addControl(drawControl);
+};
 
 $('#button-reset').click(resetApplication);
 
@@ -118,11 +120,57 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+var checkCount = function(){
+  if (state.count > 1){
+    map.removeControl(drawControl);
+    $('#button-reset').show();
+
+    var routeJson = {
+      "locations":[
+        {"lat":state.marker1._latlng.lat,"lon":state.marker1._latlng.lng},
+        {"lat":state.marker2._latlng.lat,"lon":state.marker2._latlng.lng}],
+      "costing":"auto",
+      "directions_options":{"units":"miles"}};
+    var routeStr = "https://matrix.mapzen.com/optimized_route?json=" +
+      JSON.stringify(routeJson) + "&api_key=mapzen-DvrAKEJ";
+
+    $.ajax(routeStr).done(function(routeData){
+      var routePoints = decode(routeData.trip.legs[0].shape);
+      var lineCoor = _.map(routePoints,function(theP){
+        return (theP.reverse());
+      });
+
+      var lineGeoj = {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": lineCoor
+            }
+          },
+        ]
+      };
+
+      state.line = L.geoJSON(lineGeoj);
+      state.line.addTo(map);
+
+    });//end of ajax
+  }//end of if
+
+};
 
 map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
+  layer.addTo(map);
 
-  console.log('Do something with the layer you just created', layer, layer._latlng);
+  state.count += 1;
+  state["marker"+state.count.toString()] = layer;
+  checkCount();
+
+  console.log(layer, layer._latlng);
 });

@@ -1,5 +1,12 @@
 
 // Setting up our map
+
+// var map = L.Mapzen.map('map', {
+//   center: [47.61033,-122.31801],
+//   zoom: 16,
+//   scene: L.Mapzen.BasemapStyles.BubbleWrap
+// });
+
 var map = L.map('map', {
   center: [0, 0],
   zoom: 2,

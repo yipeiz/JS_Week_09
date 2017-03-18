@@ -71,7 +71,7 @@ Moving your mouse outside of the circle should remove the highlighting.
 
 // Global Variables
 
-var myRectangle;
+var myRectangles = [];
 
 // Initialize Leaflet Draw
 
@@ -88,12 +88,56 @@ var drawControl = new L.Control.Draw({
 map.addControl(drawControl);
 
 // Run every time Leaflet draw creates a new layer
-
 map.on('draw:created', function (e) {
     var type = e.layerType; // The type of shape
     var layer = e.layer; // The Leaflet layer for the shape
     var id = L.stamp(layer); // The unique Leaflet ID for the layer
+    //$(".shape").empty();
+    $("#shapes").append(
+      "<div class='shape' data-leaflet-id=" +
+      id + "><h3>Current ID: "+
+      id + "</h3></div>");
+    //console.log(myRectangles);
+    myRectangles.push(layer.addTo(map));
+    // if (myRectangles.length === 0){
+    //   myRectangles.push(layer.addTo(map));
+    // }else{
+    //   map.removeLayer(demoShapes[0]);
+    //   demoShapes.pop();
+    //   demoShapes.push(layer.addTo(map));
+    // }
+    $(".shape").click(function(e){
+      var selectID = $(this).attr("data-leaflet-id");
+      //console.log(selectID);
+      _.each(myRectangles,function(theR){
+        if (theR._leaflet_id.toString() === selectID){
+           map.removeLayer(theR);
+        }
+      });
+      $(this).slideUp();
+    });
 
+    _.each(myRectangles,function(theRe){
 
+      theRe.on("mouseover",function(e){
+        //console.log(theRe);
+        $(".shape").each(function(ok){
+          if ( $(this).attr("data-leaflet-id") === theRe._leaflet_id.toString()){
+            //console.log(theRe._leaflet_id);
+            $(this).css("color","red");
+          }
+        });
+      });
+
+      theRe.on("mouseout",function(e){
+        //console.log(theRe);
+        $(".shape").each(function(ok){
+          if ( $(this).attr("data-leaflet-id") === theRe._leaflet_id.toString()){
+            //console.log(theRe._leaflet_id);
+            $(this).css("color","black");
+          }
+        });
+      });
+    });
 
 });
